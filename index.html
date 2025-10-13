@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campeonato Brasileiro de Pixelmon 3</title>
+<style>
+body { font-family: Arial, sans-serif; background: #f0f4f8; color: #333; text-align: center; padding: 20px; }
+h1 { color: #006400; margin-bottom: 10px; }
+.card { background: #fff; border: 2px solid #006400; border-radius: 10px; padding: 20px; margin: 20px auto; width: 90%; max-width: 900px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; }
+select, button, input { padding: 6px 10px; margin: 5px; font-size: 14px; border-radius: 5px; border: 1px solid #006400; cursor: pointer; }
+button { background-color: #228B22; color: #fff; }
+button:hover { background-color: #006400; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; text-align: center; }
+th, td { padding: 10px; border: 1px solid #006400; }
+th { background-color: #228B22; color: #fff; }
+.match { border: 1px dashed #006400; border-radius: 8px; padding: 10px; margin: 8px 0; background-color: #e6ffe6; }
+.match button { margin-top: 5px; margin-right: 5px; }
+.victory-msg { margin-top: 5px; font-weight: bold; color: #006400; }
+.waiting { font-style: italic; color: #555; margin-top: 5px; }
+.highlight { background-color: #ffff99 !important; }
+.nav-btns { margin: 10px 0; }
+.top32 { 
+    background-color: #c4f0c5 !important; /* verde claro suave */
+    font-weight: bold; 
+}
+.remove-btn { background-color: #b22222; color: #fff; padding: 2px 6px; font-size: 12px; border-radius: 3px; border: none; cursor: pointer; }
+.remove-btn:hover { background-color: #800000; }
+</style>
+</head>
+<body>
+
+<h1>🏆 Campeonato Brasileiro de Pixelmon 3</h1>
+
+<div class="nav-btns">
+<button onclick="scrollPara('tabelaJogadoresCard')">Ir para Tabela</button>
+<button onclick="scrollPara('novoJogadorCard')">Ir para Adicionar Jogador</button>
+<button onclick="scrollPara('matchesListCard')">Ir para Rodada</button>
+</div>
+
+<!-- Barra de pesquisa Tabela -->
+<div class="card">
+<h2>🔍 Pesquisar na Tabela de Jogadores</h2>
+<input type="text" id="searchTabela" placeholder="Pesquisar nick na tabela..." oninput="pesquisarTabela()">
+<button onclick="irParaTabela()">Ir para Jogador</button>
+</div>
+
+<div class="card" id="tabelaJogadoresCard">
+<h2>📋 Tabela de Jogadores</h2>
+<table id="tabelaJogadores">
+<thead><tr><th>Posição</th><th>Nick</th><th>Pontuação</th><th>Participando?</th><th>Remover</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+
+<div class="card" id="novoJogadorCard">
+<h2>➕ Adicionar Novo Jogador</h2>
+<input type="text" id="novoNick" placeholder="Nick do jogador">
+<input type="number" id="novaPontos" placeholder="Pontuação" min="0">
+<button onclick="adicionarJogador()">Adicionar Jogador</button>
+</div>
+
+<!-- Barra de pesquisa Rodada -->
+<div class="card">
+<h2>🔍 Pesquisar na Rodada</h2>
+<input type="text" id="searchRodada" placeholder="Pesquisar nick na rodada..." oninput="pesquisarRodada()">
+<button onclick="irParaRodada()">Ir para Rodada</button>
+</div>
+
+<div class="card" id="matchesListCard">
+<h2>⚔️ Emparelhamentos</h2>
+<p>Escolha o tipo de rodada:</p>
+<select id="tipoCampeonato">
+<option value="quarta">Quarta (1 ponto por vitória)</option>
+<option value="sabado">Sábado (3 pontos por vitória)</option>
+</select>
+<button onclick="gerarEmparelhamentos()">Gerar Rodada</button>
+<div id="matchesList"></div>
+</div>
+
+<script>
+// --- Lista inicial de jogadores ---
+const jogadores9 = ["Abreuolindo","Aoi_Happy","Cast","Deoxyss","Flagon","Gordinho0800","GustavoGc191","Guxtao","Itachizin","ItsRazor","Isakizin","JP_SL01","KauanSoares","Ln","Maxz_HD","joaocrazy16","Mg_12yt","Mik3ymon","NizNivek","Reiis124","Rokoraro","Sou_o_A","TallerCandy7892","TzPinheiro","Vt__","YanGabriel2010","Yttoshirib","Benas2009","cry2trickroom","Thzinnff","raiburn","Spk_Gustavin","Tokyn","giovanni_gils"];
+const jogadores6 = ["Athaydexz","10tetes","3pApenas","AberrantEar5026","Akirakkkk","akst_lulu","arthurtv22","BahzinhoL","Blessed","C4DUZ1N","Catbreak","Coutinho140702","Dhz14x","domingues_apenas","NIGHTzrxzs","fefezim","Fontananicolas","Fortah","Guonbo","Haze_TS","Migueltks","Misterio026","NOAH737f","Lczinbz","Papafrancis44","Pedroffranco","Pedrzakk","randomxd","riparze","NOOBFRA","Sr_Gomes020407","StFireizm","Tutuh7","vinizin_sla","leviantan","guztozo","yuridinamite","zoomflex666","Pa_craw","tudonosso021","znorman","P3zinYT"];
+const jogadores3 = ["1_burny","D9zinn","Caslu","DogoBr","Filhododuolingo","JVGQ23","Jao_r","JORGE0301","Jonhs0101","Kauazinn_8","gabztrash","Kniyzyn","Low_drake","Luquete1223","Medinax77","Mikey1231","Minato","mig3025","Noirt4byss","felps69","oMentuskky","robinelson","StriKingOFC","SuzukeYT","TOMIC_Z","tavaresxx","teosaleh_27","twitchKausYT","uDajjal","Vhzinho2208","Viny_KS2","Wendel","Rocks","antonio11111","breno0202","enolaka","esfaqueador","hugo","kk191","rafa1803","sandrelas","tots123","vitin47"];
+
+let jogadores = [];
+jogadores9.forEach(nick=>jogadores.push({nick,pontos:9,confirmado:true}));
+jogadores6.forEach(nick=>jogadores.push({nick,pontos:6,confirmado:true}));
+jogadores3.forEach(nick=>jogadores.push({nick,pontos:3,confirmado:true}));
+
+// --- Atualiza tabela ---
+function atualizarTabela(){
+    const tbody = document.querySelector("#tabelaJogadores tbody");
+    tbody.innerHTML = "";
+    jogadores.sort((a,b)=>b.pontos - a.pontos);
+    jogadores.forEach((j,index)=>{
+        const posicao = index+1;
+        const tr = document.createElement("tr");
+        if(posicao<=32) tr.classList.add("top32");
+        tr.innerHTML = `<td>${posicao}º</td>
+                        <td contenteditable="true" oninput="editarNick(${index}, this.innerText)">${j.nick}</td>
+                        <td contenteditable="true" oninput="editarPontos(${index}, this.innerText)">${j.pontos}</td>
+                        <td><input type="checkbox" ${j.confirmado?"checked":""} onchange="jogadores[${index}].confirmado=this.checked"></td>
+                        <td><button class="remove-btn" onclick="removerJogador(${index})">X</button></td>`;
+        tbody.appendChild(tr);
+    });
+}
+function editarNick(i,v){ jogadores[i].nick=v; }
+function editarPontos(i,v){ jogadores[i].pontos=parseInt(v)||0; }
+function adicionarJogador(){
+    const nick=document.getElementById("novoNick").value.trim();
+    const pontos=parseInt(document.getElementById("novaPontos").value)||0;
+    if(nick){ jogadores.push({nick,pontos,confirmado:true}); atualizarTabela(); document.getElementById("novoNick").value=""; document.getElementById("novaPontos").value=""; }
+}
+function removerJogador(index){
+    if(confirm(`Deseja remover ${jogadores[index].nick}?`)){
+        jogadores.splice(index,1);
+        atualizarTabela();
+    }
+}
+atualizarTabela();
+
+// --- Pesquisa Tabela ---
+function pesquisarTabela(){
+    const query=document.getElementById("searchTabela").value.toLowerCase();
+    document.querySelectorAll("#tabelaJogadores tbody tr").forEach(tr=>{
+        const nick=tr.children[1].innerText.toLowerCase();
+        tr.classList.toggle("highlight", query && nick.includes(query));
+    });
+}
+function irParaTabela(){
+    const query=document.getElementById("searchTabela").value.toLowerCase();
+    const tr = Array.from(document.querySelectorAll("#tabelaJogadores tbody tr")).find(tr=>tr.children[1].innerText.toLowerCase().includes(query));
+    if(tr) tr.scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+// --- Pesquisa Rodada ---
+function pesquisarRodada(){
+    const query=document.getElementById("searchRodada").value.toLowerCase();
+    document.querySelectorAll("#matchesList .match").forEach(div=>{
+        const text=div.innerText.toLowerCase();
+        div.classList.toggle("highlight", query && text.includes(query));
+    });
+}
+function irParaRodada(){
+    const query=document.getElementById("searchRodada").value.toLowerCase();
+    const div = Array.from(document.querySelectorAll("#matchesList .match")).find(div=>div.innerText.toLowerCase().includes(query));
+    if(div) div.scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+// --- Shuffle array ---
+function shuffle(array){
+    for(let i=array.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [array[i],array[j]]=[array[j],array[i]];
+    }
+    return array;
+}
+
+// --- Emparelhamento ---
+function gerarEmparelhamentos(){
+    const matchesDiv=document.getElementById("matchesList");
+    matchesDiv.innerHTML="";
+    const tipoRodada=document.getElementById("tipoCampeonato").value;
+    const ptsPorVitoria=tipoRodada==="sabado"?3:1;
+
+    const grupos={};
+    jogadores.filter(j=>j.confirmado).forEach(j=>{
+        if(!grupos[j.pontos]) grupos[j.pontos]=[];
+        grupos[j.pontos].push(j);
+    });
+
+    Object.keys(grupos).sort((a,b)=>b-a).forEach(pontos=>{
+        const grupo=shuffle([...grupos[pontos]]);
+        while(grupo.length>1){
+            const p1=grupo.pop();
+            const p2=grupo.pop();
+            criarPartida(p1,p2,ptsPorVitoria,matchesDiv);
+        }
+        if(grupo.length===1){
+            const p=grupo.pop();
+            const div=document.createElement("div");
+            div.className="match waiting";
+            div.textContent=`${p.nick} está na espera (nenhum par disponível nesta pontuação)`;
+            matchesDiv.appendChild(div);
+        }
+    });
+}
+
+// --- Cria partida ---
+function criarPartida(p1,p2,pts,container){
+    const div=document.createElement("div");
+    div.className="match";
+    const btn1=document.createElement("button");
+    btn1.textContent=`VITÓRIA ${p1.nick}`;
+    btn1.onclick=()=>marcarVencedor(p1,p2,0,pts,div);
+    const btn2=document.createElement("button");
+    btn2.textContent=`VITÓRIA ${p2.nick}`;
+    btn2.onclick=()=>marcarVencedor(p1,p2,1,pts,div);
+    const msgDiv=document.createElement("div"); msgDiv.className="victory-msg";
+    div.innerHTML=`${p1.nick} ⚔️ ${p2.nick}<br>`; 
+    div.appendChild(btn1); 
+    div.appendChild(btn2); 
+    div.appendChild(msgDiv);
+    container.appendChild(div);
+}
+
+// --- Marca vencedor ---
+function marcarVencedor(p1,p2,vIndex,pts,div){
+    const vencedor=vIndex===0?p1:p2;
+    const perdedor=vIndex===0?p2:p1;
+    vencedor.pontos+=pts;
+    atualizarTabela();
+    div.querySelector(".victory-msg").textContent=`${vencedor.nick} GANHOU de ${perdedor.nick}`;
+}
+
+// --- Scroll suave ---
+function scrollPara(id){
+    document.getElementById(id).scrollIntoView({behavior:"smooth",block:"start"});
+}
+</script>
+
+</body>
+</html>
